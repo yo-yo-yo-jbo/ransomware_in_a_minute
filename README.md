@@ -54,6 +54,11 @@ Note that I said `AES` is a Block Cipher (and it is), but there are Modes of Ope
 In terms of security, Symmetric ciphers are very fast and very safe, and in fact, are quite resilient even against Quantum Computers. This is not a Quantum Computing blogpost, but I will mention that the best known algorithm to crack generic Symmetric encryption systems is [Grover's algorithm](https://en.wikipedia.org/wiki/Grover%27s_algorithm) which can be used to bruteforce a searchspace of keys in `O(sqrt(N))` time complexity - which sounds amazing, until you realize doubling the key size for Symmetric Ciphers completely solves the problem.
 
 ## Asymmetric encryption
+Asymmetric encryption is much more modern. Imagine a scneaio where we all just use symmetric encryption - that means that to secure a line (let's say - between you and your bank) you'd have to exchange a *secret* (which is the symmetric key) with your bank by physically meeting them in a secure manner. Obviously that's not scalable.  
+That problem was solved by coming up with asymmetric encryption - we have two different keys now:
+- A `private key` - known only to the entity that generated the key.
+- A `public key` - distributed everywhere.
+
 
 
 
