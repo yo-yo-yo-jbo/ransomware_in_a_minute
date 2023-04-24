@@ -39,8 +39,13 @@ IV ------> XOR      |--> XOR      |--> XOR    ...     |--> XOR
             |-------|     |-------|     |---- ... ----|     |
             |             |             |                   |
             V             V             V                   V
-            E1            E2            E3    ...           En
+Ciphertext: E1            E2            E3    ...           En
 ```
+
+Note that:
+- `IV` is the `initialization vector` and it's a block size (16 bytes).
+- `P1`, `P2`, ... `Pn` are the `plaintext` blocks, where the last block (`Pn`) is padded (we won't talk about padding today).
+- `E1`, `E2`, ... `En` are the `ciphertext` blocks.
 
 If we mark `IV` as `E0`, we can make a nice formula: `E[n] = AES-encrypt(P[n] XOR E[n-1])`.
 
