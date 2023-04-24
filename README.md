@@ -23,10 +23,26 @@ Symmetric encryption has been around for hundreds of years (really!). When we ta
 - Stream ciphers: the cryptosystem works on each byte of data. You can think of stream ciphers as a blackbox that gets a key and spits out an infinite stream of pseaudo-random bytes. Those bytes are `XOR`'ed with the plaintext to create the encrypted data. This is also why stream ciphers are different from block ciphers with 1 byte - two identical plaintext bytes produce different encrypted output bytes. Think why that property is critical for the safety of the cryptosystem!
 
 The most commonly used symmetric encryption nowadays is [AES](https://en.wikipedia.org/wiki/Advanced_Encryption_Standard), which in its essence - a Block Cipher.  
-I've also seen ransomware use [RC4](https://en.wikipedia.org/wiki/RC4) as well (which is a Stream cipher).
+I've also seen ransomware use [RC4](https://en.wikipedia.org/wiki/RC4) as well (which is a Stream cipher).  
+Because of the property that identical plaintext blocks produce identical encrypted output blocks (and obviously vice-versa), all Block ciphers can use a [Mode of Operation](https://en.wikipedia.org/wiki/Block_cipher_mode_of_operation). The Mode of Operation prevents that from happening by using additional information from each block as input to another block, and a new known initial block of information called an `Initialization Vector (IV)`.  
+There are many Modes of Operation; one of the most prevalent one is `CBC`. CBC performs a `XOR` operation between the output of the previous block and the plaintext input of the next block. Here's some ASCII art that shows how that works, for instance, with `AES`:
 
+```
+Plaintext:  P1            P2            P3    ...           Pn
+            |             |             |                   |
+            |             |             |                   |
+            |             |             |                   |
+IV ------> XOR      |--> XOR      |--> XOR    ...     |--> XOR
+            |       |     |       |     |             |     |
+            |       |     |       |     |             |     |
+           AES      |    AES      |    AES            |    AES
+            |-------|     |-------|     |---- ... ----|     |
+            |             |             |                   |
+            V             V             V                   V
+            E1            E2            E3    ...           En
+```
 
-
+If we mark `IV` as `E0`, we can make a nice formula: `E[n] = AES-encrypt(P[n] XOR E[n-1])`.
 
 
 
