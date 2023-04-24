@@ -62,5 +62,26 @@ That problem was solved by coming up with asymmetric encryption - we have two di
 The two keys have a mathematical relation between them that ensure privacy. We won't talk about how that works, but virtually all asymmetric cryptosystems rely on Number Theory and *assumptions* that there are several problems that are computationally hard *unless* there is knowledge of the `private key`.  
 A textbook example is the [RSA cryptosystem](https://en.wikipedia.org/wiki/RSA_(cryptosystem)) that uses `Fermat's Little Theorem` on primes numbers, and relies on the computational difficulty of `prime factorization`. Again, this is not a math-focused blogpost so I won't discuss it too much. One note about Quantum Computation (since I mentioned it earlier on Symmetric Encryption systems) is that some of those assumed computentionally difficult problems are known to be broken with a sufficiently powerful Quantum Computer, including `RSA` (you're welcome to read about [Shor's Algorithm](https://en.wikipedia.org/wiki/Shor%27s_algorithm) if you have the appetite!).
 
+One noteworthy remark is that Asymmetric cryptosystems are tough; they require very long keys to be considered safe, and have noticable performance impacts. Also, some of them actually can't encrypt every message (but practically most messages). This is why many cryptosystems use Asymmetric encryption to exchange a secret, which is then used as a key to Symmetric ciphers.
 
+## How cryptography is connected to Ransomware
+Obviously, Ransomware needs to encrypt files. Given all the advantages of Symmetric encryption, we'd want to use that, but using a baked-in key for all files doesn't make sense, because:
+1. If someone reverse-engineers our ransomware they could simply extract they key (from disk, from memory etc).
+2. We'd want different keys for different target computers - assuming we supply a decryptor, we don't want that decryptor to be used on other computers.
+3. Decrypting one file (let's say, by exposing the encryption key) should not affect decryption of other files.
 
+There are other reasons as well, but these are the obvious ones. Therefore, we'll do what we discussed earlier:
+1. The attacker generates a `private-public key pair`, e.g. with `RSA`.
+2. The attacker keeps their `private key` and create a ransomware instance with the `public key`.
+3. One the ransomware instance tries to encrypt a file, it marks generates a random `AES` key and `IV`, encrypts the entire file with that AES key (let's say, with `AES-CBC`).
+4. The ransomware adds to the file a magic value that says it was encrypted, followed by the `IV` and `AES key` *encrypted with the RSA public key*.
+
+Why does that make sense?
+- Each file is encrypted with a different symmetric key.
+- To decrypt, the only practical way would be to get the symmetric key for each file, but that's encrypted by the public key.
+- The only practical way to decrypt the encrypted symmetric key is with the private key, which only the attacker has!
+
+When the attacker wants to decrypt, the only thing they need to do is supply the private key, which can be baked into the decryptor. The decryptor then:
+1. Traverses the entire filesystem, just like the encryptor did.
+2. For each file, checks if it has the magic value that marks it as encrypted (some ransomware uses different filenames instead).
+3. To decrypt - simply extract the encrypted `AES` key material and decrypt using the private key. Then, decrypt the entire file with the decrypted `AES` key.
