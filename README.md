@@ -59,7 +59,8 @@ That problem was solved by coming up with asymmetric encryption - we have two di
 - A `private key` - known only to the entity that generated the key.
 - A `public key` - distributed everywhere.
 
-
+The two keys have a mathematical relation between them that ensure privacy. We won't talk about how that works, but virtually all asymmetric cryptosystems rely on Number Theory and *assumptions* that there are several problems that are computationally hard *unless* there is knowledge of the `private key`.  
+A textbook example is the [RSA cryptosystem](https://en.wikipedia.org/wiki/RSA_(cryptosystem)) that uses `Fermat's Little Theorem` on primes numbers, and relies on the computational difficulty of `prime factorization`. Again, this is not a math-focused blogpost so I won't discuss it too much. One note about Quantum Computation (since I mentioned it earlier on Symmetric Encryption systems) is that some of those assumed computentionally difficult problems are known to be broken with a sufficiently powerful Quantum Computer, including `RSA` (you're welcome to read about [Shor's Algorithm](https://en.wikipedia.org/wiki/Shor%27s_algorithm) if you have the appetite!).
 
 
 
