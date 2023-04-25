@@ -224,9 +224,21 @@ Set-Content -Path $file_to_decrypt -Value $plaintext -Encoding Byte -Force
 
 We simply do the reverse of what we've done so far.
 
-## Detection and summary
+## Detection difficulties
 Here you get a nice demonstration of coding a ransomware really quick!  
 How do you detect such a thing? This is where I'd like to mention that detection is *mostly* too late at this stage - you want to *prevent*, not detect.  
 Even prevention is tough - there are a few strategies:
-- Statically signing ransomware familities is not durable.
+- Statically signing ransomware familities is not durable due to obfuscation and other techniques.
+- Looking for suspicious scripts that use cryptographic libraries - not ideal due to durability issues (attacker can implement their own AES if necessary) and also because of potential false positives.
+- Looking for many files modified in a short timespan with their overall entropy increasing - while good enough for some detection cases, not good for prevention.
 
+There are other strategies of course, but the best idea is to realize those ransomware attacks do not happen in a vacuum - there will be other malicious activity before the encryption part itself (e.g. moving laterally, gaining higher privileges, etc.) - in fact, you can already see that in the part where I delete `Volume Shadow Copies`!  
+This is why I believe most ransomware "simulators" out there are useless - once sufficient privileges is gained, a creative attacker will always find a way to get around protections, assuming all other `pre-ransom` operations were not blocked.
+
+## Summary
+In this blogpost, I showed how to create a ransomware with `PowerShell` in a few lines of code, but I really used that as an excuse to discuss the technical details of cryptography, which is what I hope you, the reader, will be focusing on in this blogpost.  
+I hope to continue blogging more about encryption - this was really only the tip of the iceberg!
+
+Thanks!
+
+Jonathan Bar Or
