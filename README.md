@@ -97,3 +97,7 @@ When the attacker wants to decrypt, the only thing they need to do is supply the
 1. Traverses the entire filesystem, just like the encryptor did.
 2. For each file, checks if it has the magic value that marks it as encrypted (some ransomware uses different filenames instead).
 3. To decrypt - simply extract the encrypted `AES` key material and decrypt using the private key. Then, decrypt the entire file with the decrypted `AES` key.
+
+Let's code it!
+
+## Coding the encryptor
