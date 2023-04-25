@@ -180,3 +180,14 @@ While the remarks are quite self-explanatory, I will mention a few things:
 2. The file contents are encrypted and the `RSA`-encrypted key material is appended *at the end of the encrypted file*.
 3. It's important to properly clear the `$aes` instance and the streams - not only for memory management but also to make sure they are not extracted from memory post-encryption.
 
+Now that this part is done, we can do something fun like changing the desktop wallpaper, dropping ransom notes or using the Windows text-to-speech. Here's the text-to-speech part:
+
+```powershell
+Add-Type -AssemblyName System.Speech
+$voice = New-Object System.Speech.Synthesis.SpeechSynthesizer
+$voice.SelectVoice("Microsoft Zira Desktop")
+$voice.Rate = 0
+$voice.Speak("All your files are belong to us")
+```
+
+I've uploaded the complete proof-of-concept to this repository.
