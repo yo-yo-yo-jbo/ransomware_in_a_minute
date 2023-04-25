@@ -224,5 +224,9 @@ Set-Content -Path $file_to_decrypt -Value $plaintext -Encoding Byte -Force
 
 We simply do the reverse of what we've done so far.
 
-## Summary
-I've uploaded the complete proof-of-concept to this repository.
+## Detection and summary
+Here you get a nice demonstration of coding a ransomware really quick!  
+How do you detect such a thing? This is where I'd like to mention that detection is *mostly* too late at this stage - you want to *prevent*, not detect.  
+Even prevention is tough - there are a few strategies:
+- Statically signing ransomware familities is not durable.
+
