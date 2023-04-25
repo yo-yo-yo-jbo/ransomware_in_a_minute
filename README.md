@@ -60,7 +60,19 @@ That problem was solved by coming up with asymmetric encryption - we have two di
 - A `public key` - distributed everywhere.
 
 The two keys have a mathematical relation between them that ensure privacy. We won't talk about how that works, but virtually all asymmetric cryptosystems rely on Number Theory and *assumptions* that there are several problems that are computationally hard *unless* there is knowledge of the `private key`.  
-A textbook example is the [RSA cryptosystem](https://en.wikipedia.org/wiki/RSA_(cryptosystem)) that uses `Fermat's Little Theorem` on primes numbers, and relies on the computational difficulty of `prime factorization`. Again, this is not a math-focused blogpost so I won't discuss it too much. One note about Quantum Computation (since I mentioned it earlier on Symmetric Encryption systems) is that some of those assumed computentionally difficult problems are known to be broken with a sufficiently powerful Quantum Computer, including `RSA` (you're welcome to read about [Shor's Algorithm](https://en.wikipedia.org/wiki/Shor%27s_algorithm) if you have the appetite!).
+A textbook example is the [RSA cryptosystem](https://en.wikipedia.org/wiki/RSA_(cryptosystem)) that uses `Fermat's Little Theorem` on primes numbers, and relies on the computational difficulty of `prime factorization`.
+This is not a math-focused blogpost, but I think it's simple enough to share:
+1. We choose two random large primes `p` and `q`. Choosing random primes is not a trivial task, and usually done with the [Miller-Rabin algorithm](https://en.m.wikipedia.org/wiki/Miller%E2%80%93Rabin_primality_test).
+2. We set `N=pq` and mark `phi=(p-1)(q-1)`. That `phi` is the value of the [Euler Totient Function](https://en.m.wikipedia.org/wiki/Euler%27s_totient_function) and counts the number of numbers below `n` that are *co-prime* of it.
+3. We choose a number `e`. Usually you'll see `e=65537` - there are good reasons for that but they're out of scope for this post.
+4. We find a number `d` such that `ed=1 (mod phi)`. We say that `d` is the *modular inverse* of `e` (mod `phi`), and find it using [the Extended Euclidean Algorithm](https://en.m.wikipedia.org/wiki/Extended_Euclidean_algorithm).
+5. Now we mark `e, N` as the `public key` and `d, N` as the `private key`.
+6. Public key operation: `c = m^e (mod N)`.
+7. Private key operation: `m = c^d (mod N)`.
+
+Note that computing `phi` for `N` without knowing its prime factors is computationally difficult, and without `phi` it's practically impossible to get the private key `d`.
+
+One note about Quantum Computation (since I mentioned it earlier on Symmetric Encryption systems) is that some of those assumed computentionally difficult problems are known to be broken with a sufficiently powerful Quantum Computer, including `RSA` (you're welcome to read about [Shor's Algorithm](https://en.wikipedia.org/wiki/Shor%27s_algorithm) if you have the appetite!).
 
 One noteworthy remark is that Asymmetric cryptosystems are tough; they require very long keys to be considered safe, and have noticable performance impacts. Also, some of them actually can't encrypt every message (but practically most messages). This is why many cryptosystems use Asymmetric encryption to exchange a secret, which is then used as a key to Symmetric ciphers.
 
