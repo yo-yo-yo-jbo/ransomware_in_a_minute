@@ -192,4 +192,37 @@ $voice.Speak("All your files are belong to us")
 
 ## Decryption
 Decryption is quite easy:
+
+```powershell
+$file_to_decrypt = "INSERT PATH TO FILE"
+$private_key_xml = "INSERT RSA PRIVATE KEY XML HERE"
+$rsa = New-Object -TypeName System.Security.Cryptography.RSACryptoServiceProvider
+$rsa.FromXmlString($private_key_xml)
+
+# Read encrypted file and split to encrypted contents and encrypted AES key material
+$bytes = Get-Content $file_to_decrypt -Encoding Byte -ReadCount 0
+$aes_key_material = $bytes[-256..-1]
+$encrypted = $bytes[0..($bytes.Length - 256 - 1)]
+
+# Decrypt AES key material and create an instance
+$aes_key_material = $rsa.Decrypt($aes_key_material, $false)
+$aes = [Security.Cryptography.SymmetricAlgorithm]::Create("AesManaged")
+$aes.Mode = [Security.Cryptography.CipherMode]::CBC
+$aes.Padding = "PKCS7"
+
+# Decrypt the bytes
+$aes_decryptor = $aes.CreateDecryptor($aes_key_material[0..15], $aes_key_material[16..31])
+$stream = New-Object -TypeName IO.MemoryStream
+$dec_stream = New-Object -TypeName Security.Cryptography.CryptoStream -ArgumentList @($stream, $aes_decryptor, [Security.Cryptography.CryptoStreamMode]::Write)
+$dec_stream.Write($encrypted, 0, $encrypted.Length)
+$dec_stream.FlushFinalBlock()
+$plaintext = $stream.ToArray()
+
+# Write file
+Set-Content -Path $file_to_decrypt -Value $plaintext -Encoding Byte -Force
+```
+
+We simply do the reverse of what we've done so far.
+
+## Summary
 I've uploaded the complete proof-of-concept to this repository.
