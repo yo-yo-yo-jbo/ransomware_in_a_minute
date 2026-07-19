@@ -241,4 +241,4 @@ I hope to continue blogging more about encryption - this was really only the tip
 
 Thanks!
 
-Jonathan Bar Or
+Jonathan Bar Or (https://jonathanbaror.com)
